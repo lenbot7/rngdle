@@ -495,48 +495,69 @@ function renderBadges() {
 
 function renderHistory() {
   const latest = state.rolls.slice(0, 10)
+  historyList.replaceChildren()
   if (latest.length === 0) {
-    historyList.innerHTML = '<p class="empty-state">No rolls yet.</p>'
+    const empty = document.createElement('p')
+    empty.className = 'empty-state'
+    empty.textContent = 'No rolls yet.'
+    historyList.append(empty)
     return
   }
-  historyList.innerHTML = latest
-    .map((roll) => {
-      const badgeSummary =
-        roll.badges.length === 0
-          ? 'No badges'
-          : roll.badges.map((id) => getBadge(id).emoji).join(' ')
-      return `
-        <div class="history-item">
-          <div>
-            <strong>${roll.display}</strong>
-            <span>${badgeSummary}</span>
-          </div>
-          <div class="history-meta">
-            <span>${roll.entropy} EP</span>
-            <span>${new Date(roll.timestamp).toLocaleTimeString()}</span>
-          </div>
-        </div>
-      `
-    })
-    .join('')
+
+  latest.forEach((roll) => {
+    const item = document.createElement('div')
+    item.className = 'history-item'
+
+    const left = document.createElement('div')
+    const number = document.createElement('strong')
+    number.textContent = roll.display
+    const badges = document.createElement('span')
+    badges.textContent =
+      roll.badges.length === 0
+        ? 'No badges'
+        : roll.badges.map((id) => getBadge(id).emoji).join(' ')
+    left.append(number, badges)
+
+    const meta = document.createElement('div')
+    meta.className = 'history-meta'
+    const entropy = document.createElement('span')
+    entropy.textContent = `${roll.entropy} EP`
+    const time = document.createElement('span')
+    time.textContent = new Date(roll.timestamp).toLocaleTimeString()
+    meta.append(entropy, time)
+
+    item.append(left, meta)
+    historyList.append(item)
+  })
 }
 
 function renderLeaderboard() {
   const totalEntropy = state.rolls.reduce((sum, roll) => sum + roll.entropy, 0)
-  const entries = [...BASE_LEADERBOARD, { name: state.displayName, points: totalEntropy, isYou: true }]
+  const entries = [
+    ...BASE_LEADERBOARD,
+    { name: state.displayName, points: totalEntropy, isYou: true },
+  ]
   entries.sort((a, b) => b.points - a.points)
-  leaderboardList.innerHTML = entries
-    .slice(0, 8)
-    .map((entry, index) => {
-      return `
-        <div class="leaderboard-item ${entry.isYou ? 'you' : ''}">
-          <span class="rank">#${index + 1}</span>
-          <span class="name">${entry.name}${entry.isYou ? ' (You)' : ''}</span>
-          <span class="points">${entry.points.toLocaleString()} EP</span>
-        </div>
-      `
-    })
-    .join('')
+  leaderboardList.replaceChildren()
+  entries.slice(0, 8).forEach((entry, index) => {
+    const item = document.createElement('div')
+    item.className = `leaderboard-item${entry.isYou ? ' you' : ''}`
+
+    const rank = document.createElement('span')
+    rank.className = 'rank'
+    rank.textContent = `#${index + 1}`
+
+    const name = document.createElement('span')
+    name.className = 'name'
+    name.textContent = `${entry.name}${entry.isYou ? ' (You)' : ''}`
+
+    const points = document.createElement('span')
+    points.className = 'points'
+    points.textContent = `${entry.points.toLocaleString()} EP`
+
+    item.append(rank, name, points)
+    leaderboardList.append(item)
+  })
 }
 
 function createRoll() {
